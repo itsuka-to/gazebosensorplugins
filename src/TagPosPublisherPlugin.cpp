@@ -7,7 +7,7 @@
 #include <boost/bind.hpp>
 #include <ros/ros.h>
 #include <gtec_msgs/GenericRanging.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/msg/PoseWithCovarianceStamped.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
 #include <tf/transform_broadcaster.h>

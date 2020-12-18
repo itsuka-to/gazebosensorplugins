@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "ROS",
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/itsuka/ros2_ws/install/**",
+                "/opt/ros/foxy/include/**",
+                "/usr/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
