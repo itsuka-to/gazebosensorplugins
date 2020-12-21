@@ -39,9 +39,9 @@ SOFTWARE.
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2/LinearMath/Matrix3x3.h"
 
-namespace gazebo
+namespace gazebo_plugins
 {
-    class UwbPlugin : public ModelPlugin
+    class UwbPlugin : public gazebo::ModelPlugin
     {
 
         double rangingStd[141][3] =
@@ -640,11 +640,11 @@ namespace gazebo
             ModelPlugin(),
             sequence(0)
         {
-            this->updatePeriod = common::Time(0.0);
+            this->updatePeriod = gazebo::common::Time(0.0);
         }
 
     public:
-        void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
+        void Load(gazebo::physics::ModelPtr _parent, sdf::ElementPtr _sdf)
         {
             node = gazebo_ros::Node::Get(_sdf);
             if (!rclcpp::ok())
@@ -664,7 +664,7 @@ namespace gazebo
             this->SetUpdateRate(_sdf->Get<double>("update_rate"));
             this->nlosSoftWallWidth = 0.25;
             this->tagZOffset = 0;
-            this->tagId = 0;
+            this->tagId = std::string("0x00");
             this->maxDBDistance = 14;
             this->stepDBDistance = 0.1;
             this->allBeaconsAreLOS = false;
@@ -678,7 +678,7 @@ namespace gazebo
 
             if (_sdf->HasElement("tag_id"))
             {
-                this->tagId = _sdf->Get<double>("tag_id");
+                this->tagId = _sdf->Get<std::string>("tag_id");
             }
 
             if (_sdf->HasElement("tag_z_offset"))
@@ -699,7 +699,7 @@ namespace gazebo
                 RCLCPP_INFO(node->get_logger(), "Parent name: %s ChildCount: %d", _parent->GetName().c_str(), _parent->GetChildCount());
                 if (this->tagLink == NULL)
                 {
-                    std::vector<physics::LinkPtr> links = _parent->GetLinks();
+                    std::vector<gazebo::physics::LinkPtr> links = _parent->GetLinks();
                     for (int i = 0; i < links.size(); ++i)
                     {
                         RCLCPP_INFO(node->get_logger(), "Link[%d]: %s", i, links[i]->GetName().c_str());
@@ -718,10 +718,10 @@ namespace gazebo
                 this->anchorPrefix = "uwb_anchor";
             }
 
-            RCLCPP_INFO(node->get_logger(), "GTEC UWB Plugin is running. Tag %d", this->tagId);
+            RCLCPP_INFO(node->get_logger(), "GTEC UWB Plugin is running. Tag %s", this->tagId);
             RCLCPP_INFO(node->get_logger(), "GTEC UWB Plugin All parameters loaded");
 
-            this->lastUpdateTime = common::Time(0.0);
+            this->lastUpdateTime = gazebo::common::Time(0.0);
 
             std::string topicRanging = "/gtec/toa/ranging";
 
@@ -738,21 +738,21 @@ namespace gazebo
             this->gtecUwbPub = node->create_publisher<gtec_msgs::msg::Ranging>(topicRanging, 1000);
             this->gtecAnchors = node->create_publisher<visualization_msgs::msg::MarkerArray>(topicAnchors, 1000);
 
-            this->firstRay = boost::dynamic_pointer_cast<physics::RayShape>(
-                                 this->world->Physics()->CreateShape("ray", physics::CollisionPtr()));
+            this->firstRay = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
+                                 this->world->Physics()->CreateShape("ray", gazebo::physics::CollisionPtr()));
 
-            this->secondRay = boost::dynamic_pointer_cast<physics::RayShape>(
-                                  this->world->Physics()->CreateShape("ray", physics::CollisionPtr()));
+            this->secondRay = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
+                                  this->world->Physics()->CreateShape("ray", gazebo::physics::CollisionPtr()));
 
             this->updateConnection =
-                event::Events::ConnectWorldUpdateBegin(boost::bind(&UwbPlugin::OnUpdate, this, _1));
+                gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&UwbPlugin::OnUpdate, this, _1));
         }
 
     public:
-        void OnUpdate(const common::UpdateInfo &_info)
+        void OnUpdate(const gazebo::common::UpdateInfo &_info)
         {
-            common::Time simTime = _info.simTime;
-            common::Time elapsed = simTime - this->lastUpdateTime;
+            gazebo::common::Time simTime = _info.simTime;
+            gazebo::common::Time elapsed = simTime - this->lastUpdateTime;
             if (elapsed >= this->updatePeriod)
             {
                 this->lastUpdateTime = _info.simTime;
@@ -821,13 +821,13 @@ namespace gazebo
                 visualization_msgs::msg::MarkerArray markerArray;
                 visualization_msgs::msg::MarkerArray interferencesArray;
 
-                physics::Model_V models = this->world->Models();
-                for (physics::Model_V::iterator iter = models.begin(); iter != models.end(); ++iter)
+                gazebo::physics::Model_V models = this->world->Models();
+                for (gazebo::physics::Model_V::iterator iter = models.begin(); iter != models.end(); ++iter)
                 {
 
                     if ((*iter)->GetName().find(this->anchorPrefix) == 0)
                     {
-                        physics::ModelPtr anchor = *iter;
+                        gazebo::physics::ModelPtr anchor = *iter;
                         std::string aidStr = anchor->GetName().substr(this->anchorPrefix.length());
                         int aid = std::stoi(aidStr);
                         ignition::math::Pose3d anchorPose = anchor->WorldPose();
@@ -1063,14 +1063,14 @@ namespace gazebo
 
                             if (losType!=NLOS)
                             {
-                                // gtec_msgs::msg::Ranging ranging_msg;
-                                // ranging_msg.anchorId = aid;
-                                // ranging_msg.tagId = this->tagId;
-                                // ranging_msg.range = rangingValue;
-                                // ranging_msg.seq = this->sequence;
-                                // ranging_msg.rss = powerValue;
-                                // ranging_msg.errorEstimation = 0.00393973;
-                                // this->gtecUwbPub->publish(ranging_msg);
+                                gtec_msgs::msg::Ranging ranging_msg;
+                                ranging_msg.anchor_id = aidStr;
+                                ranging_msg.tag_id = this->tagId;
+                                ranging_msg.range = rangingValue;
+                                ranging_msg.seq = this->sequence;
+                                ranging_msg.rss = powerValue;
+                                ranging_msg.error_estimation = 0.00393973;
+                                this->gtecUwbPub->publish(ranging_msg);
                             }
                         }
 
@@ -1143,29 +1143,29 @@ namespace gazebo
         void Reset() override
         {
             RCLCPP_INFO(node->get_logger(), "GTEC UWB Plugin RESET");
-            this->lastUpdateTime = common::Time(0.0);
+            this->lastUpdateTime = gazebo::common::Time(0.0);
         }
 
     private:
-        physics::ModelPtr model;
+        gazebo::physics::ModelPtr model;
     private:
-        physics::WorldPtr world;
+        gazebo::physics::WorldPtr world;
     private:
-        physics::RayShapePtr firstRay;
+        gazebo::physics::RayShapePtr firstRay;
     private:
-        physics::RayShapePtr secondRay;
+        gazebo::physics::RayShapePtr secondRay;
     private:
-        event::ConnectionPtr updateConnection;
+        gazebo::event::ConnectionPtr updateConnection;
     private:
-        common::Time updatePeriod;
+        gazebo::common::Time updatePeriod;
     private:
-        common::Time lastUpdateTime;
+        gazebo::common::Time lastUpdateTime;
     private:
         double tagZOffset;
     private:
         std::string anchorPrefix;
     private:
-        physics::LinkPtr tagLink;
+        gazebo::physics::LinkPtr tagLink;
     private:
         rclcpp::Publisher<gtec_msgs::msg::Ranging>::SharedPtr gtecUwbPub;
     private:
@@ -1181,7 +1181,7 @@ namespace gazebo
     private:
         bool allBeaconsAreLOS;
     private:
-        int tagId;
+        std::string tagId;
     private:
         bool useParentAsReference;
     private:

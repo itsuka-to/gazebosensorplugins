@@ -51,7 +51,7 @@ find_package(gazebo REQUIRED)
 link_directories(${GAZEBO_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIR} ${ament_cmake_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS})
 
-add_library(gtec_uwb_plugin src/UwbPlugin.cpp)
+add_library(gtec_uwb_plugin SHARED src/UwbPlugin.cpp)
 ament_target_dependencies(gtec_uwb_plugin
   gazebo_ros_pkgs
   std_msgs
