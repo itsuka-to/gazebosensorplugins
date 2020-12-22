@@ -821,6 +821,8 @@ namespace gazebo_plugins
                 visualization_msgs::msg::MarkerArray markerArray;
                 visualization_msgs::msg::MarkerArray interferencesArray;
 
+                int anchor_i = 0;
+
                 gazebo::physics::Model_V models = this->world->Models();
                 for (gazebo::physics::Model_V::iterator iter = models.begin(); iter != models.end(); ++iter)
                 {
@@ -1076,10 +1078,12 @@ namespace gazebo_plugins
 
                         visualization_msgs::msg::Marker marker;
                         marker.header.frame_id = "world";
-                        marker.header.stamp = rclcpp::Time();
-                        marker.id = aid;
+                        marker.header.stamp = node->now();
+                        marker.id = anchor_i;
+                        anchor_i++;
                         marker.type = visualization_msgs::msg::Marker::CYLINDER;
                         marker.action = visualization_msgs::msg::Marker::ADD;
+                        marker.lifetime.sec = 5;
                         marker.pose.position.x = anchorPose.Pos().X();
                         marker.pose.position.y = anchorPose.Pos().Y();
                         marker.pose.position.z = anchorPose.Pos().Z();
