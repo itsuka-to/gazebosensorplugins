@@ -2,7 +2,7 @@
 This package forked from https://github.com/valentinbarral/gazebosensorplugins
 
 I made some modification to use on ros2-foxy.
-Now, only UwbPlugin can be used.
+Now, **only UwbPlugin** can be used.
 
 My modified gtec_msgs: 
 https://github.com/itsuka-to/rosmsgs
